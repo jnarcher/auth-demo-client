@@ -9,10 +9,7 @@ import Root from "./routes/Root.tsx";
 import ErrorPage from "./ErrorPage.tsx";
 import Login from "./routes/Login.tsx";
 import ProtectedRoute from "./routes/ProtectedRoute.tsx";
-
-const isAuthenticated = () => {
-    return false;
-}
+import { AuthProvider } from "./context/AuthProvider.tsx";
 
 const router = createBrowserRouter([
     {
@@ -21,7 +18,7 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage />
     },
     {
-        element: <ProtectedRoute isAuthenticated={isAuthenticated()}/>,
+        element: <ProtectedRoute />,
         children: [
             {
                 path: "dashboard",
@@ -33,6 +30,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <RouterProvider router={router} />
+        <AuthProvider>
+            <RouterProvider router={router} />
+        </AuthProvider>
     </React.StrictMode>
 );

@@ -1,23 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-// import { FaGithub, FaGoogle } from "react-icons/fa";
+import { useContext, useEffect, useRef, useState } from "react";
 import Footer from "../components/Footer";
 import logo from "../assets/placeholder-logo.svg";
 import axios from "../api/axios";
+import AuthContext from "../context/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import { CgSpinnerAlt } from "react-icons/cg";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 
-// const providers = [
-//     {
-//         text: "Google",
-//         provider: "google",
-//         icon: <FaGoogle />,
-//     },
-//     {
-//         text: "Github",
-//         provider: "github",
-//         icon: <FaGithub />,
-//     },
-// ];
-
-const LOGIN_URL = "/login";
+const LOGIN_URL = "/public/login";
 
 function Login() {
     const userRef = useRef<HTMLInputElement>(null);
@@ -25,7 +15,13 @@ function Login() {
 
     const [user, setUser] = useState("");
     const [pwd, setPwd] = useState("");
+    const [pwdVisible, setPwdVisible] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const { setIsAuthenticated } = useContext(AuthContext);
+
+    const nav = useNavigate();
 
     useEffect(() => {
         userRef.current?.focus();
@@ -33,6 +29,7 @@ function Login() {
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const res = await axios.post(
                 LOGIN_URL,
@@ -43,17 +40,22 @@ function Login() {
                 }
             );
             console.log(res.data);
-            console.log(JSON.stringify(res))
+            console.log(JSON.stringify(res));
+
+            setIsAuthenticated(true);
 
             setUser("");
-            setPwd("");
+            nav("/dashboard");
         } catch (err: any) {
             if (!err?.response) {
-                setError("No server response.")
+                setError("No server response.");
             } else {
-                setError("Unable to login.")
+                setError("Unable to login.");
             }
             errRef.current?.focus();
+        } finally {
+            setPwd("");
+            setLoading(false);
         }
     };
 
@@ -78,7 +80,7 @@ function Login() {
                                 {error}
                             </p>
                         )}
-                        <form onSubmit={handleSubmit}>
+                        <div>
                             <div className="flex flex-col gap-2 mb-5">
                                 <label
                                     className="font-bold text-neutral-300 select-none"
@@ -105,23 +107,36 @@ function Login() {
                                 >
                                     Password
                                 </label>
-                                <input
-                                    type="password"
-                                    id="passInput"
-                                    placeholder="••••••••"
-                                    value={pwd}
-                                    required
-                                    onChange={(e) => setPwd(e.target.value)}
-                                    className="bg-neutral-700 px-4 py-2 rounded-md outline outline-1 outline-neutral-600"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={pwdVisible ? "text" : "password"}
+                                        id="passInput"
+                                        placeholder="••••••••"
+                                        value={pwd}
+                                        required
+                                        onChange={(e) => setPwd(e.target.value)}
+                                        className="bg-neutral-700 px-4 py-2 rounded-md w-full outline outline-1 outline-neutral-600"
+                                    />
+                                    <button
+                                        onClick={() =>
+                                            setPwdVisible(!pwdVisible)
+                                        }
+                                        className="top-0 absolute p-3 rounded-e.md end-0"
+                                    >
+                                        <PwdVisibleToggle visible={pwdVisible}/>
+                                    </button>
+                                </div>
                             </div>
-                            <button className="mb-5 text-neutral-400 hover:text-neutral-300 hover:underline hover:">Forgot password?</button>
-                            <button
-                                className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-500 disabled:opacity-30 px-5 p-2 rounded-lg w-full font-bold"
-                            >
-                                Login
+                            <button className="mb-5 text-neutral-400 hover:text-neutral-300 hover:underline hover:">
+                                Forgot password?
                             </button>
-                        </form>
+                            <button
+                                onClick={handleSubmit}
+                                className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-500 disabled:opacity-30 px-5 p-2 rounded-lg w-full h-10 font-bold"
+                            >
+                                {loading ? <Spinner /> : "Login"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -130,25 +145,16 @@ function Login() {
     );
 }
 
-// type ProviderButtonProps = {
-//     text: string;
-//     provider: string;
-//     icon: JSX.Element;
-// };
-// function ProviderButton({ text, provider, icon }: ProviderButtonProps) {
-//     const handleLogin = () => {
-//         window.location.href = `http://localhost:3000/auth/${provider}`;
-//     };
+function PwdVisibleToggle({ visible }: { visible: boolean }) {
+    return visible ? <FaRegEye /> : <FaRegEyeSlash />;
+}
 
-//     return (
-//         <button
-//             className="flex justify-center items-center gap-4 bg-neutral-900 hover:bg-neutral-800 mb-2 px-5 p-2 rounded-lg font-bold"
-//             onClick={handleLogin}
-//         >
-//             {icon}
-//             {text}
-//         </button>
-//     );
-// }
+function Spinner() {
+    return (
+        <div className="flex justify-center items-center animate-spin">
+            <CgSpinnerAlt />
+        </div>
+    );
+}
 
 export default Login;
