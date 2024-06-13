@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
-import { CgSpinnerAlt } from "react-icons/cg";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import { CgSpinnerAlt } from "react-icons/cg";
 
-
-function Login() {
+function SignUp() {
     const userRef = useRef<HTMLInputElement>(null);
     const errRef = useRef<HTMLParagraphElement>(null);
 
     const [user, setUser] = useState("");
     const [pwd, setPwd] = useState("");
+    const [pwdConfirm, setPwdConfirm] = useState("");
     const [pwdVisible, setPwdVisible] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { signup } = useAuth();
 
     const nav = useNavigate();
 
@@ -25,9 +25,15 @@ function Login() {
 
     const handleSubmit = async (e: any) => {
         e.preventDefault();
+
+        if (pwd !== pwdConfirm) {
+            setError("Passwords must match")
+            return
+        }
+
         setLoading(true);
         try {
-            await login(user, pwd)
+            await signup(user, pwd)
             setUser("");
             nav("/dashboard");
         } catch (err: any) {
@@ -113,22 +119,54 @@ function Login() {
                                     </button>
                                 </div>
                             </div>
+                            <div className="flex flex-col gap-2 mb-5">
+                                <label
+                                    className="font-bold text-neutral-300 select-none"
+                                    htmlFor="passInputConfirm"
+                                >
+                                    Confirm Password
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={pwdVisible ? "text" : "password"}
+                                        id="passInputConfirm"
+                                        placeholder="••••••••"
+                                        value={pwdConfirm}
+                                        required
+                                        onChange={(e) => setPwdConfirm(e.target.value)}
+                                        className="bg-neutral-700 px-4 py-2 rounded-md w-full outline outline-1 outline-neutral-600"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setPwdVisible(!pwdVisible);
+                                        }}
+                                        tabIndex={-1}
+                                        className="top-0 absolute p-3 rounded-e.md text-neutral-400 end-0"
+                                    >
+                                        <PwdVisibleToggle
+                                            visible={pwdVisible}
+                                        />
+                                    </button>
+                                </div>
+                            </div>
                             <button
                                 type="submit"
-                                className="bg-gradient-to-tr from-violet-400 to-pink-400 hover:shadow-md px-5 p-2 rounded-lg w-full h-10 font-bold text-white transition-all hover:-translate-y-[2px]"
+                                className="bg-gradient-to-tr from-violet-400 to-pink-400 hover:shadow-md mt-3 px-5 p-2 rounded-lg w-full h-10 font-bold text-white transition-all hover:-translate-y-[2px]"
                             >
-                                {loading ? <Spinner /> : "Login"}
+                                {loading ? <Spinner /> : "Sign Up"}
                             </button>
                             <div className="flex gap-2 mt-5">
-                                <span>Need an account?</span>
+                                <span>Already have an account?</span>
                                 <button
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        nav("/signup")
+                                        nav("/login")
                                     }}
                                     className="font-bold text-violet-400 hover:text-violet-300 hover:underline"
                                 >
-                                    Sign Up 
+                                    Log In
                                 </button>
                             </div>
                         </form>
@@ -150,5 +188,4 @@ function Spinner() {
         </div>
     );
 }
-
-export default Login;
+export default SignUp;
